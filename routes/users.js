@@ -3,6 +3,7 @@ var router = express.Router();
 var passport = require('passport');
 var User = require('../models/user');
 var Verify    = require('./verify');
+var requestify = require('requestify');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -15,6 +16,7 @@ router.post('/register', function(req, res) {
         if (err) {
           return res.status(500).json({err: err});
         }
+          user.email = req.body.username;
         if(req.body.firstname){
           user.firstname = req.body.firstname;
         }
@@ -69,6 +71,71 @@ router.get('/logout', function(req, res) {
   res.status(200).json({
     status: 'Bye!'
   });
+});
+
+router.route('/:userId')
+    .get(Verify.verifyOrdinaryUser, function (req, res, next) {
+        User.findById(req.params.userId)
+            .exec(function (err, msg) {
+                if (err) throw err;
+                res.json({user: msg});
+            });
+    });
+
+router.get('/login/login_with_google_token', function(req,res,next){
+    requestify.get('https://www.googleapis.com/oauth2/v2/userinfo?access_token='+req.query.access_token)
+        .then(function(response) {
+            response = response.getBody();
+            if (response.email){
+                User.findOne({username: response.email}, function (err, user) {
+                    if (err) {
+                        console.log(err); //handle errors!!
+                    }
+                    if (!err && user !== null) {
+                        user.email = response.username;
+                        user.GoogleOauthId = response.id;
+                        user.GoogleOauthToken = req.query.access_token;
+                        user.save(function (err) {
+                            if (err) {
+                                console.log(err); // handle errors!
+                            } else {
+                                console.log('saving user...');
+                                var token = Verify.getToken(user);
+
+                                return res.status(200).json({
+                                    status: 'Login successful',
+                                    success: true,
+                                    token: token
+                                });
+                            }
+                        });
+                    } else {
+                        // console.log(profile.emails);
+                        user = new User({
+                            username: response.email
+                        });
+                        user.GoogleOauthId = response.id;
+                        user.GoogleOauthToken = req.query.access_token;
+                        user.save(function (err) {
+                            if (err) {
+                                console.log(err); // handle errors!
+                            } else {
+                                console.log('saving user...');
+                                var token = Verify.getToken(user);
+
+                                return res.status(200).json({
+                                    status: 'Login successful',
+                                    success: true,
+                                    token: token
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                console.log(response);
+            }
+        });
 });
 
 router.get('/google', passport.authenticate('google', {

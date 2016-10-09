@@ -17,8 +17,7 @@ exports.google = passport.use(new GoogleStrategy({
         passReqToCallback: true
     },
     function (request, accessToken, refreshToken, profile, done) {
-        console.log(JSON.stringify(profile));
-        User.findOne({GoogleOauthId: profile.id}, function (err, user) {
+        User.findOne({username: profile.email}, function (err, user) {
             if (err) {
                 console.log(err); //handle errors!!
             }

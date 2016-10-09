@@ -10,10 +10,9 @@ messageRouter.use(bodyParser.json());
 
 messageRouter.route('/')
     .get(Verify.verifyOrdinaryUser, function (req, res, next) {
-        console.log("\n" + JSON.stringify(req.query) + "\n");
         var limit = Math.abs(req.query.limit*1);
         var page = Math.abs(req.query.page*1);
-        limit = limit?limit:10;
+        limit = limit?limit:2;
         page = page?page:1;
         var query = {};
         var options = {
@@ -21,12 +20,21 @@ messageRouter.route('/')
             // sort:     { date: -1 },
             populate: 'comments.commentBy',
             lean: true,
-            // offset: (page>1)?page*limit-1:page,
             page: page,
             limit: limit
         };
         Message.paginate(query, options).then(function (result) {
-            res.json(result.docs);
+            res.json({
+                messages: result.docs,
+                meta: {
+                    pagination: {
+                        total: result.total,
+                        limit: result.limit,
+                        pages: result.pages,
+                        page: result.page
+                    }
+                }
+            });
         });
         // Message.find({})
         //     .populate('comments.commentBy')
@@ -37,16 +45,16 @@ messageRouter.route('/')
     })
 
     .post(Verify.verifyOrdinaryUser, Verify.verifyAdmin, function (req, res, next) {
-        req.body.postedBy = req.decoded._doc._id;
-        Message.create(req.body, function (err, msg) {
+        req.body.message.postedBy = req.decoded._doc._id;
+        Message.create(req.body.message, function (err, msg) {
             if (err) throw err;
             console.log('Message created!');
             var id = msg._id;
-            res.writeHead(200, {
-                'Content-Type': 'text/plain'
-            });
+            // res.writeHead(200, {
+            //     'Content-Type': 'application/json'
+            // });
 
-            res.end('Added the message with id: ' + id);
+            res.status(201).json({"message": "Added the message with id: " + id});
         });
     })
 
@@ -60,20 +68,22 @@ messageRouter.route('/')
 messageRouter.route('/:msgId')
     .get(Verify.verifyOrdinaryUser, function (req, res, next) {
         Message.findById(req.params.msgId)
-            .populate('comments.commentBy')
+            .populate('comments.commentBy', 'username')
+            // .populate('comments.commentBy')
             .exec(function (err, msg) {
                 if (err) throw err;
-                res.json(msg);
+                res.json({message: msg});
             });
     })
 
     .put(Verify.verifyOrdinaryUser, Verify.verifyAdmin, function (req, res, next) {
         Message.findByIdAndUpdate(req.params.msgId, {
-            $set: req.body
+            $set: req.body.message
         }, {
             new: true // return updated entity
         }, function (err, msg) {
             if (err) throw err;
+            console.log(msg);
             res.json(msg);
         });
     })

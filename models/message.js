@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var mongoosePaginate = require('mongoose-paginate');
+var deepPopulate = require('mongoose-deep-populate')(mongoose);
 
 var commentSchema = new Schema({
     comment: {
@@ -10,12 +11,11 @@ var commentSchema = new Schema({
     commentBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
+    },
+    message: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message'
     }
-    // ,
-    // message: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Message'
-    // }
 }, {
     timestamps: true
 });
@@ -39,6 +39,7 @@ var messageSchema = new Schema({
 });
 
 messageSchema.plugin(mongoosePaginate);
+messageSchema.plugin(deepPopulate);
 
 var Message = mongoose.model('Message', messageSchema);
 
