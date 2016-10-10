@@ -9,6 +9,7 @@ var passport = require('passport');
 var authenticate = require('./authenticate');
 var config = require('./config');
 var cors = require('cors');
+var fileUpload = require('express-fileupload');
 
 mongoose.connect(config.mongoUrl);
 var db = mongoose.connection;
@@ -24,6 +25,7 @@ var messageRouter = require('./routes/messageRouter');
 
 var app = express();
 app.use(cors());
+app.use(fileUpload());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

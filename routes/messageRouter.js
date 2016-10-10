@@ -136,6 +136,46 @@ messageRouter.route('/:msgId/comments')
         });
     });
 
+messageRouter.route('/:msgId/files')
+    // .all(Verify.verifyOrdinaryUser)
+
+    .get(function (req, res, next) {
+        Message.findById(req.params.msgId)
+            // .populate('comments.commentBy')
+            .exec(function (err, msg) {
+                if (err) throw err;
+                res.json({files: msg.files});
+            });
+    })
+
+    .post(function (req, res, next) {
+        Message.findById(req.params.msgId, function (err, msg) {
+            if (err) throw err;
+            msg.files.push(req.body);
+            msg.save(function (err, msg) {
+                if (err) throw err;
+                console.log('Updated Comments!');
+                res.json(msg);
+            });
+        });
+    })
+
+    .delete(Verify.verifyAdmin, function (req, res, next) {
+        Message.findById(req.params.msgId, function (err, msg) {
+            if (err) throw err;
+            for (var i = (msg.comments.length - 1); i >= 0; i--) {
+                msg.comments.id(msg.comments[i]._id).remove();
+            }
+            msg.save(function (err, result) {
+                if (err) throw err;
+                res.writeHead(200, {
+                    'Content-Type': 'text/plain'
+                });
+                res.end('Deleted all comments!');
+            });
+        });
+    });
+
 messageRouter.route('/:msgId/comments/:commentId')
     .all(Verify.verifyOrdinaryUser)
 
@@ -166,7 +206,7 @@ messageRouter.route('/:msgId/comments/:commentId')
 
     .delete(function (req, res, next) {
         Message.findById(req.params.msgId, function (err, msg) {
-            if (msg.comments.id(req.params.commentId).postedBy
+            if (msg.comments.id(req.params.commentId).commentBy
                 != req.decoded._doc._id) {
                 var err = new Error('You are not authorized to perform this operation!');
                 err.status = 403;
@@ -176,8 +216,39 @@ messageRouter.route('/:msgId/comments/:commentId')
             msg.save(function (err, resp) {
                 if (err) throw err;
                 res.json(resp);
+                // res.json('');
             });
         });
+    });
+
+
+
+messageRouter.route('/upload')
+    // .all(Verify.verifyOrdinaryUser)
+    .post(function (req, res, next) {
+        // We delete the existing commment and insert the updated
+        // comment as a new comment
+
+
+        // var file = __dirname + '../public/upload/dramaticpenguin.jpeg';
+        // res.download(file);
+        console.log(__dirname);
+        console.log('*************************');
+        console.log(req.files);
+        console.log('*************************');
+
+
+        // Message.findById(req.params.msgId, function (err, msg) {
+        //     if (err) throw err;
+        //     msg.comments.id(req.params.commentId).remove();
+        //     req.body.commentBy = req.decoded._doc._id;
+        //     msg.comments.push(req.body);
+        //     msg.save(function (err, msg) {
+        //         if (err) throw err;
+        //         console.log('Updated Comments!');
+        //         res.json(msg);
+        //     });
+        // })
     });
 
 module.exports = messageRouter;
