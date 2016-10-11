@@ -92,7 +92,7 @@ router.get('/login/login_with_google_token', function(req,res,next){
                         console.log(err); //handle errors!!
                     }
                     if (!err && user !== null) {
-                        user.email = response.username;
+                        user.email = response.username;/////////////////////////???????????
                         user.GoogleOauthId = response.id;
                         user.GoogleOauthToken = req.query.access_token;
                         user.save(function (err) {

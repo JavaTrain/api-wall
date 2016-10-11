@@ -10,6 +10,7 @@ var authenticate = require('./authenticate');
 var config = require('./config');
 var cors = require('cors');
 var fileUpload = require('express-fileupload');
+// var fileupload = require('fileupload').createFileUpload('/uploadDir').middleware
 
 mongoose.connect(config.mongoUrl);
 var db = mongoose.connection;
@@ -25,7 +26,9 @@ var messageRouter = require('./routes/messageRouter');
 
 var app = express();
 app.use(cors());
-app.use(fileUpload());
+// app.use(fileUpload());
+app.use(bodyParser.json({limit: "50mb"}));
+app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 var mongoosePaginate = require('mongoose-paginate');
 var deepPopulate = require('mongoose-deep-populate')(mongoose);
 
-var fileSchema = new Schema({
+var filesSchema = new Schema({
     name: {
         type: String,
         // required: true
@@ -58,7 +58,7 @@ var messageSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    files: [fileSchema],
+    files: [filesSchema],
     comments: [commentSchema]
 }, {
     timestamps: true

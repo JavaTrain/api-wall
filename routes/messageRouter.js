@@ -137,7 +137,7 @@ messageRouter.route('/:msgId/comments')
     });
 
 messageRouter.route('/:msgId/files')
-    // .all(Verify.verifyOrdinaryUser)
+    .all(Verify.verifyOrdinaryUser)
 
     .get(function (req, res, next) {
         Message.findById(req.params.msgId)
@@ -151,11 +151,16 @@ messageRouter.route('/:msgId/files')
     .post(function (req, res, next) {
         Message.findById(req.params.msgId, function (err, msg) {
             if (err) throw err;
+            base64Data = req.body.link.split(',')[1];
+            require('fs').writeFile('public/upload/'+req.body.name,base64Data, 'base64', function(err){
+               if (err) console.log(err);
+            });
+            req.body.link = req.protocol + '://' + req.get('host') + '/upload/' + req.body.name;
             msg.files.push(req.body);
             msg.save(function (err, msg) {
                 if (err) throw err;
-                console.log('Updated Comments!');
-                res.json(msg);
+                console.log('Added File!');
+                res.json('msg');
             });
         });
     })
@@ -175,6 +180,51 @@ messageRouter.route('/:msgId/files')
             });
         });
     });
+
+messageRouter.route('/:msgId/files/:fileId')
+    .all(Verify.verifyOrdinaryUser)
+
+    .get(function (req, res, next) {
+        Message.findById(req.params.msgId)
+            // .populate('comments.commentBy')
+            .exec(function (err, msg) {
+                if (err) throw err;
+                res.json(msg.files.id(req.params.fileId));
+            });
+    })
+
+    .put(function (req, res, next) {
+        // We delete the existing commment and insert the updated
+        // comment as a new comment
+        Message.findById(req.params.msgId, function (err, msg) {
+            if (err) throw err;
+            msg.files.id(req.params.fileId).remove();
+            msg.file.push(req.body);
+            msg.save(function (err, msg) {
+                if (err) throw err;
+                console.log('Updated Files!');
+                res.json(msg);
+            });
+        });
+    })
+
+    .delete(function (req, res, next) {
+        Message.findById(req.params.msgId, function (err, msg) {
+            // if (msg.postedBy != req.decoded._doc._id) {
+            //     var err = new Error('You are not authorized to perform this operation!');
+            //     err.status = 403;
+            //     return next(err);
+            // }
+            msg.files.id(req.params.fileId).remove();
+            msg.save(function (err, resp) {
+                if (err) throw err;
+                res.json({message: resp});
+                // res.json('');
+            });
+        });
+    });
+
+
 
 messageRouter.route('/:msgId/comments/:commentId')
     .all(Verify.verifyOrdinaryUser)
@@ -223,32 +273,32 @@ messageRouter.route('/:msgId/comments/:commentId')
 
 
 
-messageRouter.route('/upload')
-    // .all(Verify.verifyOrdinaryUser)
-    .post(function (req, res, next) {
-        // We delete the existing commment and insert the updated
-        // comment as a new comment
-
-
-        // var file = __dirname + '../public/upload/dramaticpenguin.jpeg';
-        // res.download(file);
-        console.log(__dirname);
-        console.log('*************************');
-        console.log(req.files);
-        console.log('*************************');
-
-
-        // Message.findById(req.params.msgId, function (err, msg) {
-        //     if (err) throw err;
-        //     msg.comments.id(req.params.commentId).remove();
-        //     req.body.commentBy = req.decoded._doc._id;
-        //     msg.comments.push(req.body);
-        //     msg.save(function (err, msg) {
-        //         if (err) throw err;
-        //         console.log('Updated Comments!');
-        //         res.json(msg);
-        //     });
-        // })
-    });
+// messageRouter.route('/upload')
+//     // .all(Verify.verifyOrdinaryUser)
+//     .post(function (req, res, next) {
+//         // We delete the existing commment and insert the updated
+//         // comment as a new comment
+//
+//
+//         // var file = __dirname + '../public/upload/dramaticpenguin.jpeg';
+//         // res.download(file);
+//         console.log(__dirname);
+//         console.log('*************************');
+//         console.log(req.files);
+//         console.log('*************************');
+//
+//
+//         // Message.findById(req.params.msgId, function (err, msg) {
+//         //     if (err) throw err;
+//         //     msg.comments.id(req.params.commentId).remove();
+//         //     req.body.commentBy = req.decoded._doc._id;
+//         //     msg.comments.push(req.body);
+//         //     msg.save(function (err, msg) {
+//         //         if (err) throw err;
+//         //         console.log('Updated Comments!');
+//         //         res.json(msg);
+//         //     });
+//         // })
+//     });
 
 module.exports = messageRouter;
