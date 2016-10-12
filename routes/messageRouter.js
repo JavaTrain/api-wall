@@ -218,8 +218,8 @@ messageRouter.route('/:msgId/files/:fileId')
             msg.files.id(req.params.fileId).remove();
             msg.save(function (err, resp) {
                 if (err) throw err;
-                // res.json({files:resp.files});
-                res.json('');
+                res.json({files:resp.files});
+                // res.json('');
             });
         });
     });
