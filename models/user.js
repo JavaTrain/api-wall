@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
+var mongoosePaginate = require('mongoose-paginate');
 
 var User = new Schema({
     username: {
@@ -50,5 +51,6 @@ User.methods.getName = function(){
 
 
 User.plugin(passportLocalMongoose);
+User.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('User', User);

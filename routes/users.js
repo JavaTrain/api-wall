@@ -6,9 +6,49 @@ var Verify    = require('./verify');
 var requestify = require('requestify');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+router.route('/')
+    .get(Verify.verifyOrdinaryUser, function (req, res, next) {
+        var sorts = {
+            lastname: 'lastname',
+            email: 'email'
+        };
+        var limit = Math.abs(req.query.limit * 1);
+        var page = Math.abs(req.query.page * 1);
+        var sortfield = req.query.sort;
+        var sort = {};
+        if (sortfield && sortfield[0] == '-') {
+            console.log(sortfield.substring(1, sortfield.length));
+            sort[sorts[sortfield.substring(1, sortfield.length)]] = 'desc';
+        } else if (sortfield) {
+            sort[sorts[sortfield]] = 'asc';
+        }
+        limit = limit ? limit : 2;
+        page = page ? page : 1;
+        var query = {};
+        var options = {
+            // select:   'title date author',
+            select:   'firstname lastname email image gender phone username',
+            // sort: {lastname: -1},
+            sort: sort,
+            // populate: 'comments.commentBy',
+            lean: true,
+            page: page,
+            limit: limit
+        };
+        User.paginate(query, options).then(function (result) {
+            res.json({
+                users: result.docs,
+                meta: {
+                    pagination: {
+                        total: result.total,
+                        limit: result.limit,
+                        pages: result.pages,
+                        page: result.page
+                    }
+                }
+            });
+        });
+    });
 
 router.post('/register', function(req, res) {
   User.register(new User({ username : req.body.username }),
@@ -80,6 +120,17 @@ router.route('/:userId')
                 if (err) throw err;
                 res.json({user: msg});
             });
+    })
+    .put(Verify.verifyOrdinaryUser, function (req, res, next) {
+        User.findByIdAndUpdate(req.params.userId, {
+            $set: req.body.user
+        }, {
+            new: true // return updated entity
+        }, function (err, msg) {
+            if (err) throw err;
+            console.log(msg);
+            res.json(msg);
+        });
     });
 
 router.get('/login/login_with_google_token', function(req,res,next){
