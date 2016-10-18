@@ -4,6 +4,7 @@ var passport = require('passport');
 var User = require('../models/user');
 var Verify    = require('./verify');
 var requestify = require('requestify');
+var fs = require('fs');
 
 /* GET users listing. */
 router.route('/')
@@ -131,6 +132,63 @@ router.route('/:userId')
             console.log(msg);
             res.json(msg);
         });
+    });
+router.route('/:userId/avatar')
+    .get(Verify.verifyOrdinaryUser, function (req, res, next) {
+        User.findById(req.params.userId)
+            .exec(function (err, msg) {
+                if (err) throw err;
+                res.json({image: msg.image});
+            });
+    })
+    .put(Verify.verifyOrdinaryUser, function (req, res, next) {
+        User.findByIdAndUpdate(req.params.userId, {
+            $set: req.body.user
+        }, {
+            new: true // return updated entity
+        }, function (err, msg) {
+            if (err) throw err;
+            console.log(msg);
+            res.json(msg);
+        });
+    })
+    .post(Verify.verifyOrdinaryUser, function (req, res, next) {
+        User.findById(req.params.userId, function (err, user) {
+            if (err) throw err;
+            if(user.image && fs.existsSync(user.image)){
+                fs.unlinkSync('/upload/avatar/ilya-ilf-i-evgenii-petrov-zolotoi-telenok.jpg');
+            }
+            base64Data = req.body.link.split(',')[1];
+            var name = req.body.name.split('.');
+            var ext = name.pop();
+            name = name.join('.')+'-'+new Date().getTime()+new Date().getUTCMilliseconds()+'.'+ext;
+            require('fs').writeFile('public/upload/avatar/'+name, base64Data, 'base64', function(err){
+                if (err) console.log(err);
+            });
+            var link = req.protocol + '://' + req.get('host') + '/upload/avatar/' + name;
+            user.image = link;
+            user.save(function (err, user) {
+                if (err) throw err;
+                console.log('Added Image!');
+                res.json({file:{link: user.image, name:name}});
+            });
+        });
+    /*
+     Message.findById(req.params.msgId, function (err, msg) {
+     if (err) throw err;
+     base64Data = req.body.link.split(',')[1];
+     require('fs').writeFile('public/upload/'+req.body.name,base64Data, 'base64', function(err){
+     if (err) console.log(err);
+     });
+     req.body.link = req.protocol + '://' + req.get('host') + '/upload/' + req.body.name;
+     msg.files.push(req.body);
+     msg.save(function (err, msg) {
+     if (err) throw err;
+     console.log('Added File!');
+     res.json(msg);
+     });
+     });
+     */
     });
 
 router.get('/login/login_with_google_token', function(req,res,next){
