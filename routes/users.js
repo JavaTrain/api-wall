@@ -107,6 +107,23 @@ router.post('/login', function(req, res, next) {
   })(req,res,next);
 });
 
+
+router.route('/refresh-token')
+    .post(Verify.verifyOrdinaryUser, function (req, res, next) {
+        User.findById(req.decoded._doc._id)
+            .exec(function (err, user) {
+                if (err) throw err;
+                var token = Verify.getToken(user);
+                console.log(token);
+                res.status(200).json({
+                    status: 'Token refreshed!',
+                    success: true,
+                    token: token
+                });
+            });
+    });
+
+
 router.get('/logout', function(req, res) {
   req.logout();
   res.status(200).json({
@@ -155,9 +172,9 @@ router.route('/:userId/avatar')
     .post(Verify.verifyOrdinaryUser, function (req, res, next) {
         User.findById(req.params.userId, function (err, user) {
             if (err) throw err;
-            if(user.image && fs.existsSync(user.image)){
-                fs.unlinkSync('/upload/avatar/ilya-ilf-i-evgenii-petrov-zolotoi-telenok.jpg');
-            }
+            // if(user.image && fs.existsSync(user.image)){
+            //     fs.unlinkSync('/upload/avatar/ilya-ilf-i-evgenii-petrov-zolotoi-telenok.jpg');
+            // }
             base64Data = req.body.link.split(',')[1];
             var name = req.body.name.split('.');
             var ext = name.pop();

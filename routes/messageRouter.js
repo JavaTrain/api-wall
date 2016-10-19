@@ -69,7 +69,7 @@ messageRouter.route('/:msgId')
     .get(Verify.verifyOrdinaryUser, function (req, res, next) {
         Message.findById(req.params.msgId)
             .populate('comments.commentBy', 'username')
-            // .populate('comments.commentBy')
+            .populate('comments.commentBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json({message: msg});

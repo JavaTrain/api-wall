@@ -5,7 +5,7 @@ var config = require('../config.js');
 exports.getToken = function (user) {
     return jwt.sign(user, config.secretKey, {
         audience: user._id+'',
-        expiresIn: 360000
+        expiresIn: 180
     });
 };
 
@@ -22,6 +22,7 @@ exports.verifyOrdinaryUser = function (req, res, next) {
                 err.status = 401;
                 return next(err);
             } else {
+                // console.log('***********'+JSON.stringify(decoded)+'***************');
                 // if everything is good, save to request for use in other routes
                 req.decoded = decoded;
                 next();
