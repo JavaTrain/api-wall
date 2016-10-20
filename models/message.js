@@ -33,7 +33,7 @@ var commentSchema = new Schema({
         type: String,
         required: true
     },
-    commentBy: {
+    commentedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },

@@ -18,7 +18,7 @@ messageRouter.route('/')
         var options = {
             // select:   'title date author',
             // sort:     { date: -1 },
-            populate: 'comments.commentBy',
+            // populate: 'comments.commentedBy',
             lean: true,
             page: page,
             limit: limit
@@ -37,7 +37,7 @@ messageRouter.route('/')
             });
         });
         // Message.find({})
-        //     .populate('comments.commentBy')
+        //     .populate('comments.commentedBy')
         //     .exec(function (err, msg) {
         //         if (err) throw err;
         //         res.json(msg);
@@ -68,8 +68,8 @@ messageRouter.route('/')
 messageRouter.route('/:msgId')
     .get(Verify.verifyOrdinaryUser, function (req, res, next) {
         Message.findById(req.params.msgId)
-            .populate('comments.commentBy', 'username')
-            .populate('comments.commentBy')
+            // .populate('comments.commentedBy', 'username')
+            // .populate('comments.commentedBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json({message: msg});
@@ -100,7 +100,7 @@ messageRouter.route('/:msgId/comments')
 
     .get(function (req, res, next) {
         Message.findById(req.params.msgId)
-            .populate('comments.commentBy')
+            .populate('comments.commentedBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json({comments: msg.comments});
@@ -110,7 +110,7 @@ messageRouter.route('/:msgId/comments')
     .post(function (req, res, next) {
         Message.findById(req.params.msgId, function (err, msg) {
             if (err) throw err;
-            req.body.commentBy = req.decoded._doc._id;
+            req.body.commentedBy = req.decoded._doc._id;
             msg.comments.push(req.body);
             msg.save(function (err, msg) {
                 if (err) throw err;
@@ -141,7 +141,7 @@ messageRouter.route('/:msgId/files')
 
     .get(function (req, res, next) {
         Message.findById(req.params.msgId)
-            // .populate('comments.commentBy')
+            // .populate('comments.commentedBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json({files: msg.files});
@@ -186,7 +186,7 @@ messageRouter.route('/:msgId/files/:fileId')
 
     .get(function (req, res, next) {
         Message.findById(req.params.msgId)
-            // .populate('comments.commentBy')
+            // .populate('comments.commentedBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json(msg.files.id(req.params.fileId));
@@ -231,7 +231,7 @@ messageRouter.route('/:msgId/comments/:commentId')
 
     .get(function (req, res, next) {
         Message.findById(req.params.msgId)
-            .populate('comments.commentBy')
+            .populate('comments.commentedBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json(msg.comments.id(req.params.commentId));
@@ -244,19 +244,19 @@ messageRouter.route('/:msgId/comments/:commentId')
         Message.findById(req.params.msgId, function (err, msg) {
             if (err) throw err;
             msg.comments.id(req.params.commentId).remove();
-            req.body.commentBy = req.decoded._doc._id;
+            req.body.commentedBy = req.decoded._doc._id;
             msg.comments.push(req.body);
             msg.save(function (err, msg) {
                 if (err) throw err;
                 console.log('Updated Comments!');
-                res.json(msg);
+                res.json({message: msg});
             });
         });
     })
 
     .delete(function (req, res, next) {
         Message.findById(req.params.msgId, function (err, msg) {
-            if (msg.comments.id(req.params.commentId).commentBy
+            if (msg.comments.id(req.params.commentId).commentedBy
                 != req.decoded._doc._id) {
                 var err = new Error('You are not authorized to perform this operation!');
                 err.status = 403;
@@ -283,7 +283,7 @@ messageRouter.route('/:msgId/likes')
 
     .get(function (req, res, next) {
         Message.findById(req.params.msgId)
-        // .populate('comments.commentBy')
+        // .populate('comments.commentedBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json({likes: msg.likes});
@@ -333,7 +333,7 @@ messageRouter.route('/:msgId/likes/:fileId')
 
     .get(function (req, res, next) {
         Message.findById(req.params.msgId)
-        // .populate('comments.commentBy')
+        // .populate('comments.commentedBy')
             .exec(function (err, msg) {
                 if (err) throw err;
                 res.json(msg.files.id(req.params.fileId));

@@ -31,7 +31,7 @@ router.route('/')
             select:   'firstname lastname email image gender phone username',
             // sort: {lastname: -1},
             sort: sort,
-            // populate: 'comments.commentBy',
+            // populate: 'comments.commentedBy',
             lean: true,
             page: page,
             limit: limit
