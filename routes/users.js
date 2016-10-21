@@ -15,10 +15,9 @@ router.route('/')
         };
         var limit = Math.abs(req.query.limit * 1);
         var page = Math.abs(req.query.page * 1);
-        var sortfield = req.query.sort;
+        var sortfield = req.query.sortBy;
         var sort = {};
         if (sortfield && sortfield[0] == '-') {
-            console.log(sortfield.substring(1, sortfield.length));
             sort[sorts[sortfield.substring(1, sortfield.length)]] = 'desc';
         } else if (sortfield) {
             sort[sorts[sortfield]] = 'asc';
@@ -26,6 +25,17 @@ router.route('/')
         limit = limit ? limit : 2;
         page = page ? page : 1;
         var query = {};
+        if(req.query.like){
+            if (req.query.like['email']){
+                var pattern = '.*'+req.query.like['email']+'.*';
+                query.email = new RegExp(pattern, 'i');
+            }
+            if (req.query.like['name-for-filter']){
+                // var pattern = '.*'+req.query.like['name-for-filter']+'.*';
+                // query.firstname = new RegExp(pattern, 'i');
+                // query.lastname = new RegExp(pattern, 'i');
+            }
+        }
         var options = {
             // select:   'title date author',
             select:   'firstname lastname email image gender phone username',
@@ -34,7 +44,7 @@ router.route('/')
             // populate: 'comments.commentedBy',
             lean: true,
             page: page,
-            limit: limit
+            limit: limit,
         };
         User.paginate(query, options).then(function (result) {
             res.json({
@@ -114,7 +124,7 @@ router.route('/refresh-token')
             .exec(function (err, user) {
                 if (err) throw err;
                 var token = Verify.getToken(user);
-                console.log(token);
+                // console.log(token);
                 res.status(200).json({
                     status: 'Token refreshed!',
                     success: true,
@@ -146,7 +156,7 @@ router.route('/:userId')
             new: true // return updated entity
         }, function (err, msg) {
             if (err) throw err;
-            console.log(msg);
+            // console.log(msg);
             res.json(msg);
         });
     });
@@ -165,7 +175,6 @@ router.route('/:userId/avatar')
             new: true // return updated entity
         }, function (err, msg) {
             if (err) throw err;
-            console.log(msg);
             res.json(msg);
         });
     })
@@ -190,22 +199,6 @@ router.route('/:userId/avatar')
                 res.json({file:{link: user.image, name:name}});
             });
         });
-    /*
-     Message.findById(req.params.msgId, function (err, msg) {
-     if (err) throw err;
-     base64Data = req.body.link.split(',')[1];
-     require('fs').writeFile('public/upload/'+req.body.name,base64Data, 'base64', function(err){
-     if (err) console.log(err);
-     });
-     req.body.link = req.protocol + '://' + req.get('host') + '/upload/' + req.body.name;
-     msg.files.push(req.body);
-     msg.save(function (err, msg) {
-     if (err) throw err;
-     console.log('Added File!');
-     res.json(msg);
-     });
-     });
-     */
     });
 
 router.get('/login/login_with_google_token', function(req,res,next){
